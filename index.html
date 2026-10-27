@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>소수의 자리 이동 놀이터</title>
+<style>
+  :root{
+    --navy:#17324d; --blue:#2878c8; --sky:#eaf5ff; --orange:#ffb547;
+    --green:#16856b; --pink:#fff0e8; --paper:#ffffff; --bg:#f4f8fc;
+    --line:#d8e3ee; --muted:#526477;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--navy);font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif}
+  header{background:linear-gradient(120deg,#17324d,#2878c8);color:#fff;padding:28px 18px 30px;text-align:center}
+  header h1{font-size:clamp(27px,4vw,42px);margin:0 0 10px;letter-spacing:-1px}
+  header p{font-size:clamp(15px,2vw,19px);margin:0;line-height:1.6}
+  main{max-width:1100px;margin:24px auto;padding:0 16px 40px}
+  section{background:var(--paper);border-radius:20px;padding:clamp(18px,3vw,30px);margin-bottom:20px;box-shadow:0 5px 18px #17324d0c}
+  h2{font-size:clamp(22px,3vw,29px);margin:0 0 18px}
+  .rule-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .rule{padding:18px;border-radius:15px;background:var(--sky);font-size:18px;line-height:1.7}
+  .rule:nth-child(2){background:#fff4df}
+  .rule strong{display:block;font-size:22px;margin-bottom:4px}
+  .direction{font-size:32px;font-weight:900;letter-spacing:2px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input[type="text"]{font-size:23px;width:210px;max-width:100%;padding:12px;border:2px solid var(--line);border-radius:12px;color:var(--navy)}
+  button{font:700 17px inherit;font-size:17px;font-weight:700;border:0;border-radius:12px;padding:13px 17px;cursor:pointer;transition:transform .12s,filter .12s}
+  button:hover{filter:brightness(.97);transform:translateY(-1px)}
+  button:focus-visible,input:focus-visible{outline:3px solid #ffb547;outline-offset:3px}
+  .primary{background:var(--blue);color:white}
+  .multiply{background:#dff3eb;color:#126b57}
+  .divide{background:#fff0d6;color:#8a5100}
+  .secondary{background:#eaf0f6;color:var(--navy)}
+  .hint{color:var(--muted);font-size:15px;line-height:1.6;margin:12px 0 0}
+  .operation-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}
+  .operation-row button{min-width:100px}
+  .board-wrap{overflow-x:auto;padding:14px 0 4px}
+  .place-labels,.digit-board{display:grid;grid-template-columns:repeat(14,minmax(42px,1fr));min-width:650px;gap:5px}
+  .place-labels{margin-bottom:7px}
+  .place-labels div{text-align:center;color:#5d7185;font-size:13px;font-weight:700;padding:7px 0}
+  .place-labels .dot-col{color:#b35b00}
+  .digit-board{align-items:stretch;position:relative}
+  .cell{min-height:72px;border:2px solid var(--line);border-radius:12px;background:#f9fbfd;display:flex;justify-content:center;align-items:center;font-size:clamp(24px,3.2vw,34px);font-weight:800;position:relative}
+  .cell.active{background:#eaf5ff;border-color:#9dcaf2}
+  .cell.dot-col{border:0;background:transparent;font-size:37px;color:#e38b18;align-items:center}
+  .cell .digit{display:inline-block;will-change:transform;}
+  @media (prefers-reduced-motion: reduce){.cell .digit{will-change:auto}}
+  .result-line{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:clamp(24px,4vw,39px);font-weight:900;margin:18px 0 8px}
+  .number-pill{background:var(--sky);padding:10px 20px;border-radius:14px}
+  .result-pill{background:#e0f5ec;color:#126b57;padding:10px 20px;border-radius:14px}
+  .explain{font-size:19px;line-height:1.8;background:#f7f9fc;border-left:5px solid var(--orange);padding:15px 18px;border-radius:10px;margin-top:18px}
+  .quiz-top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+  .score{font-weight:800;color:var(--green);font-size:18px}
+  .question{font-size:clamp(25px,4vw,36px);font-weight:900;text-align:center;margin:24px 0}
+  .answer-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+  .answer-row input{width:220px;text-align:center;font-size:25px;padding:12px;border:2px solid var(--line);border-radius:12px}
+  .feedback{text-align:center;font-size:19px;font-weight:700;min-height:32px;margin-top:16px;line-height:1.6}
+  .small-note{font-size:14px;color:var(--muted);line-height:1.6}
+  footer{text-align:center;color:#66788a;font-size:13px;padding:0 16px 25px}
+  @media(max-width:650px){.rule-grid{grid-template-columns:1fr}.operation-row button{flex:1}.cell{min-height:58px}.place-labels,.digit-board{grid-template-columns:repeat(14,minmax(38px,1fr));min-width:600px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔢 소수의 자리 이동 놀이터</h1>
+  <p>소수점은 제자리에! 숫자들이 왼쪽 또는 오른쪽으로 움직여요.</p>
+</header>
+<main>
+  <section>
+    <h2>1. 꼭 기억해요!</h2>
+    <div class="rule-grid">
+      <div class="rule">
+        <strong>✖️ 10배, 100배, 1000배</strong>
+        <div class="direction">숫자 ← 왼쪽</div>
+        10배면 한 칸, 100배면 두 칸,<br>1000배면 세 칸 이동해요.
+      </div>
+      <div class="rule">
+        <strong>➗ 1/10배, 1/100배, 1/1000배</strong>
+        <div class="direction">오른쪽 → 숫자</div>
+        1/10배면 한 칸, 1/100배면 두 칸,<br>1/1000배면 세 칸 이동해요.
+      </div>
+    </div>
+    <p class="hint">※ 숫자의 크기가 변할 때 각 숫자가 나타내는 자리도 변해요. 이 활동에서는 소수점을 고정해 두고 숫자 타일이 움직이는 모습으로 알아봅니다.</p>
+  </section>
+
+  <section>
+    <h2>2. 직접 움직여 보기</h2>
+    <div class="controls">
+      <label for="startNum" style="font-size:19px;font-weight:800">처음 수</label>
+      <input id="startNum" type="text" inputmode="decimal" value="3.25" aria-label="처음 수 입력">
+      <button class="primary" id="setNumber">수 바꾸기</button>
+      <button class="secondary" id="reset">처음으로</button>
+    </div>
+    <p class="hint">0보다 크거나 같은 수를 입력해 보세요. 소수 셋째 자리까지 연습할 수 있어요. 예: 4.7, 0.36, 12.405</p>
+    <div class="operation-row">
+      <button class="multiply" data-power="1">✖ 10배</button>
+      <button class="multiply" data-power="2">✖ 100배</button>
+      <button class="multiply" data-power="3">✖ 1000배</button>
+      <button class="divide" data-power="-1">÷ 10<br><small>(1/10배)</small></button>
+      <button class="divide" data-power="-2">÷ 100<br><small>(1/100배)</small></button>
+      <button class="divide" data-power="-3">÷ 1000<br><small>(1/1000배)</small></button>
+    </div>
+    <div class="result-line">
+      <span class="number-pill" id="beforeNum">3.25</span>
+      <span id="operator">× 10 =</span>
+      <span class="result-pill" id="afterNum">32.5</span>
+    </div>
+    <div class="board-wrap" aria-label="소수점 고정 자리판">
+      <div class="place-labels" id="labels"></div>
+      <div class="digit-board" id="board"></div>
+    </div>
+    <div class="explain" id="explanation" aria-live="polite">3.25를 10배 하면 각 숫자가 왼쪽으로 한 칸 이동해요. 소수점은 그대로예요.</div>
+  </section>
+
+  <section>
+    <div class="quiz-top">
+      <h2 style="margin:0">3. 연습문제 도전!</h2>
+      <div class="score" id="score">맞힌 문제: 0 / 0</div>
+    </div>
+    <p class="hint">곱셈과 나눗셈 문제를 풀어 보세요. 답은 숫자로 입력하면 됩니다. 예: 0.45</p>
+    <div class="question" id="question">0.7 × 100 = ?</div>
+    <div class="answer-row">
+      <input id="answer" type="text" inputmode="decimal" placeholder="답을 입력하세요" aria-label="연습문제 답">
+      <button class="primary" id="checkAnswer">정답 확인</button>
+      <button class="secondary" id="nextQuestion">다음 문제</button>
+    </div>
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+    <div style="text-align:center;margin-top:8px">
+      <button class="secondary" id="showHint">자리 이동 힌트 보기</button>
+    </div>
+    <div class="explain" id="quizHint" hidden></div>
+  </section>
+  <section>
+    <h2>4. 마지막으로 확인!</h2>
+    <ul style="font-size:18px;line-height:1.9;padding-left:25px;margin-bottom:0">
+      <li>10배는 숫자가 왼쪽으로 한 칸 이동해요.</li>
+      <li>100배는 왼쪽으로 두 칸, 1000배는 왼쪽으로 세 칸 이동해요.</li>
+      <li>1/10배, 1/100배, 1/1000배는 각각 오른쪽으로 한 칸, 두 칸, 세 칸 이동해요.</li>
+      <li>이동할 숫자가 없는 자리는 0으로 채워질 수 있어요.</li>
+    </ul>
+  </section>
+</main>
+<footer>초등학교 4학년 수학 · 소수의 크기와 자리의 관계</footer>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const labels = $('labels'), board = $('board');
+  // 왼쪽 8칸 + 소수점 + 오른쪽 5칸 = 14칸
+  const leftPlaces = ['천만','백만','십만','만','천','백','십','일'];
+  const rightPlaces = ['십분의 일','백분의 일','천분의 일','만분의 일','십만분의 일'];
+  const placeNames = [...leftPlaces, '.', ...rightPlaces];
+  placeNames.forEach((p,i) => {
+    const el = document.createElement('div');
+    el.textContent = p;
+    if (i === 8) el.className = 'dot-col';
+    labels.appendChild(el);
+    const cell = document.createElement('div');
+    cell.className = 'cell' + (i === 8 ? ' dot-col' : '');
+    if (i === 8) cell.textContent = '.';
+    else cell.dataset.index = i;
+    board.appendChild(cell);
+  });
+
+  let original = '3.25';
+  let current = '3.25';
+  let power = 1;
+  let quiz = null, total = 0, correct = 0, answered = false;
+
+  function normalizeInput(value) {
+    let s = String(value).trim().replace(',', '.');
+    if (!/^\d+(\.\d{0,3})?$/.test(s)) return null;
+    if (s.startsWith('.')) s = '0' + s;
+    if (s.endsWith('.')) s = s.slice(0,-1);
+    // 불필요한 정수 앞의 0만 정리하고, 소수 뒤의 0은 보존하지 않음
+    let parts = s.split('.');
+    parts[0] = parts[0].replace(/^0+(?=\d)/,'');
+    parts[1] = (parts[1] || '').replace(/0+$/,'');
+    return parts[1] ? parts[0] + '.' + parts[1] : parts[0];
+  }
+  function shiftDecimal(value, places) {
+    let [whole, frac=''] = value.split('.');
+    let digits = whole + frac;
+    let decimalIndex = whole.length + places;
+    // 자리판 범위를 넘는 경우도 결과값은 문자열로 계산
+    if (decimalIndex <= 0) return '0.' + '0'.repeat(-decimalIndex) + digits;
+    if (decimalIndex >= digits.length) return digits + '0'.repeat(decimalIndex - digits.length);
+    return digits.slice(0,decimalIndex) + '.' + digits.slice(decimalIndex);
+  }
+  function cleanResult(s) {
+    if (!s.includes('.')) return s.replace(/^0+(?=\d)/,'');
+    let [a,b] = s.split('.');
+    a = a.replace(/^0+(?=\d)/,'');
+    b = b.replace(/0+$/,'');
+    return b ? a + '.' + b : a;
+  }
+  function render() {
+    // 기존 숫자들의 화면 위치를 기억해, 새 자리까지 부드럽게 이동시키는 FLIP 애니메이션
+    const oldRects = new Map();
+    board.querySelectorAll('.digit[data-digit-index]').forEach(el => {
+      oldRects.set(el.dataset.digitIndex, el.getBoundingClientRect());
+    });
+    const [whole, frac=''] = current.split('.');
+    const integerDigits = whole.split('');
+    const fractionDigits = frac.split('');
+    const cells = [...board.querySelectorAll('.cell:not(.dot-col)')];
+    cells.forEach(cell => {
+      const idx = Number(cell.dataset.index);
+      let digit = '', digitIndex = '';
+      if (idx < 8) {
+        const placeFromRight = 7 - idx;
+        const pos = integerDigits.length - 1 - placeFromRight;
+        if (pos >= 0) { digit = integerDigits[pos]; digitIndex = String(pos); }
+      } else {
+        const fracPos = idx - 9;
+        if (fracPos < fractionDigits.length) {
+          digit = fractionDigits[fracPos]; digitIndex = String(whole.length + fracPos);
+        }
+      }
+      cell.innerHTML = digit ? `<span class="digit" data-digit-index="${digitIndex}">${digit}</span>` : '';
+      cell.classList.toggle('active', Boolean(digit));
+    });
+    // 각 숫자를 이전 위치에서 새 위치로 천천히 이동. 소수점은 애니메이션 대상이 아니에요.
+    board.querySelectorAll('.digit[data-digit-index]').forEach(el => {
+      const old = oldRects.get(el.dataset.digitIndex);
+      if (!old || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const now = el.getBoundingClientRect();
+      const dx = old.left - now.left, dy = old.top - now.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      el.animate([
+        { transform: `translate(${dx}px, ${dy}px)`, opacity: 0.9 },
+        { transform: 'translate(0, 0)', opacity: 1 }
+      ], { duration: 850, easing: 'cubic-bezier(0.22, 0.75, 0.25, 1)', fill: 'both' });
+    });
+    $('beforeNum').textContent = original;
+    $('afterNum').textContent = current;
+    $('operator').textContent = power > 0 ? `× ${10**power} =` : power < 0 ? `÷ ${10**(-power)} =` : '=';
+    const direction = power > 0 ? '왼쪽' : '오른쪽';
+    const steps = Math.abs(power);
+    const action = power > 0 ? `${10**power}배` : `1/${10**steps}배`;
+    $('explanation').innerHTML = power === 0
+      ? '처음 수예요. 위의 배율 버튼을 눌러 숫자들이 어떻게 이동하는지 관찰해 보세요.'
+      : `<strong>${original}</strong>을(를) <strong>${action}</strong> 하면 숫자들이 <strong>${direction}으로 ${steps}칸</strong> 부드럽게 이동해요. 소수점은 움직이지 않아요.`;
+  }
+  function applyPower(p) {
+    power = p;
+    current = cleanResult(shiftDecimal(original, p));
+    render();
+  }
+  function setStart() {
+    const n = normalizeInput($('startNum').value);
+    if (n === null || Number(n) > 99999999) {
+      $('explanation').textContent = '숫자를 다시 확인해 주세요. 0 이상의 수를 소수 셋째 자리까지 입력할 수 있어요.';
+      $('startNum').focus(); return;
+    }
+    original = n; current = n; power = 0;
+    $('beforeNum').textContent = original; $('afterNum').textContent = current;
+    $('operator').textContent = '=';
+    $('explanation').textContent = '이제 위의 버튼을 눌러 숫자들이 어떻게 이동하는지 관찰해 보세요.';
+    render();
+    $('operator').textContent = '=';
+  }
+  $('setNumber').addEventListener('click', setStart);
+  $('startNum').addEventListener('keydown', e => { if(e.key==='Enter') setStart(); });
+  $('reset').addEventListener('click', () => { $('startNum').value = original; current=original; power=0; render(); $('operator').textContent='='; $('explanation').textContent='처음 수로 돌아왔어요. 배율 버튼을 눌러 보세요.'; });
+  document.querySelectorAll('[data-power]').forEach(btn => btn.addEventListener('click', () => applyPower(Number(btn.dataset.power))));
+
+  const sampleNums = ['0.4','0.7','1.25','2.08','3.6','4.35','6.125','12.5','0.36','8.04','25.3','0.09'];
+  const powers = [1,2,3,-1,-2,-3];
+  function makeQuiz() {
+    const n = sampleNums[Math.floor(Math.random()*sampleNums.length)];
+    const p = powers[Math.floor(Math.random()*powers.length)];
+    quiz = {n, p, answer: cleanResult(shiftDecimal(n,p))};
+    $('question').textContent = `${n} ${p>0?'× '+10**p:'× 1/'+10**(-p)} = ?`;
+    $('answer').value=''; $('feedback').textContent=''; $('quizHint').hidden=true;
+    answered=false; $('answer').focus();
+  }
+  function check() {
+    if (!quiz || answered) return;
+    const a = normalizeInput($('answer').value);
+    if (a === null) { $('feedback').textContent='숫자 형태로 답을 입력해 보세요.'; $('feedback').style.color='#a65b00'; return; }
+    total++;
+    const isCorrect = Number(a) === Number(quiz.answer);
+    if (isCorrect) { correct++; $('feedback').textContent='정답이에요! 자리 이동을 잘 관찰했어요. 🎉'; $('feedback').style.color='#16856b'; }
+    else { $('feedback').textContent=`다시 살펴봐요. 정답은 ${quiz.answer}이에요. 숫자가 ${quiz.p>0?'왼쪽':'오른쪽'}으로 ${Math.abs(quiz.p)}칸 이동해요.`; $('feedback').style.color='#b44b3b'; }
+    $('score').textContent=`맞힌 문제: ${correct} / ${total}`;
+    answered=true;
+  }
+  $('checkAnswer').addEventListener('click', check);
+  $('answer').addEventListener('keydown', e=>{if(e.key==='Enter') check();});
+  $('nextQuestion').addEventListener('click', makeQuiz);
+  $('showHint').addEventListener('click', () => {
+    if (!quiz) return;
+    const dir = quiz.p>0?'왼쪽':'오른쪽';
+    $('quizHint').hidden=false;
+    $('quizHint').innerHTML=`<strong>힌트:</strong> ${quiz.n}에서 숫자를 <strong>${dir}으로 ${Math.abs(quiz.p)}칸</strong> 옮겨 보세요. 소수점은 고정되어 있어요.<br>계산 결과: <strong>${quiz.answer}</strong>`;
+  });
+  render(); makeQuiz();
+})();
+</script>
+</body>
+</html>
